@@ -79,7 +79,7 @@ export function App() {
           <h1 className="text-base font-semibold leading-tight">
             Svenska Mått
           </h1>
-          <p className="text-xs text-slate-500">Recept i svenska mått</p>
+          <p className="text-xs text-slate-500">Recept med Svenska Mått</p>
         </div>
 
         {status.kind === 'ready' && hasIngredients(status.items) && (
