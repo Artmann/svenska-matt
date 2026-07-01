@@ -42,6 +42,10 @@ and any section headings in it are kept.
 Bug reports, dictionary additions, and pull requests are welcome. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup and architecture.
 
+## Made by
+
+Created by [Gustavs Kitchen](https://gustavskitchen.se/).
+
 ## License
 
 [MIT](LICENSE) © Christoffer Artmann
