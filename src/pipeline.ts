@@ -1,10 +1,11 @@
-import type { ConvertedIngredient, RawPageData } from './types'
+import type { ConvertedIngredient, RawPageData, RecipeItem } from './types'
 import { convert } from './conversion/units'
 import { convertMeasurements } from './conversion/measurements'
 import { convertTemperatures } from './conversion/temperature'
 import { extractIngredients } from './extraction/ingredients'
 import { formatIngredient } from './formatting/swedish'
 import { parseIngredient } from './parsing/parse-ingredient'
+import { isSectionHeading, sectionHeadingText } from './section'
 import { translateName } from './translation/translate-name'
 import { translateNote } from './translation/notes'
 
@@ -26,6 +27,10 @@ export function convertIngredientLine(line: string): ConvertedIngredient {
   return { original: line, text }
 }
 
-export function convertPageData(raw: RawPageData): ConvertedIngredient[] {
-  return extractIngredients(raw).map(convertIngredientLine)
+export function convertRecipe(raw: RawPageData): RecipeItem[] {
+  return extractIngredients(raw).map((line) =>
+    isSectionHeading(line)
+      ? { kind: 'heading', text: sectionHeadingText(line) }
+      : { kind: 'ingredient', ...convertIngredientLine(line) }
+  )
 }

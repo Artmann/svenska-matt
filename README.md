@@ -11,6 +11,10 @@ It reads the page in this order of preference:
 2. **Microdata** — `[itemprop="recipeIngredient"]`.
 3. **Your text selection** — highlight an ingredient list and open the popup.
 
+Section headers in a selected list (e.g. `For the frosting:` or `Pastry Crust`)
+are detected and kept verbatim, so the converted ingredients stay grouped under
+their sections.
+
 Everything runs locally. There is no API key, no network call, and the Swedish
 ingredient names come from a built-in dictionary (`src/translation/dictionary.ts`).
 

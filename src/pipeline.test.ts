@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test'
 
-import { convertIngredientLine, convertPageData } from './pipeline'
+import { convertIngredientLine, convertRecipe } from './pipeline'
 
 test('converts an imperial line into a swedish one', () => {
   expect(convertIngredientLine('2 cups all-purpose flour')).toEqual({
@@ -44,10 +44,42 @@ test('converts a whole page of structured data', () => {
   })
 
   expect(
-    convertPageData({ jsonLd: [jsonLd], microdata: [], selection: '' })
+    convertRecipe({ jsonLd: [jsonLd], microdata: [], selection: '' })
   ).toEqual([
-    { original: '2 cups flour', text: '5 dl vetemjöl' },
-    { original: '1 tsp salt', text: '1 tsk salt' },
-    { original: '3 tomatoes, diced', text: '3 tomat (tärnad)' }
+    { kind: 'ingredient', original: '2 cups flour', text: '5 dl vetemjöl' },
+    { kind: 'ingredient', original: '1 tsp salt', text: '1 tsk salt' },
+    {
+      kind: 'ingredient',
+      original: '3 tomatoes, diced',
+      text: '3 tomat (tärnad)'
+    }
+  ])
+})
+
+test('preserves section headings from a selected list', () => {
+  const selection = [
+    'Pastry Crust',
+    '2 cups all purpose flour',
+    '1/4 cup sugar',
+    'Cream Filling',
+    '1 cup heavy cream',
+    '1 tsp vanilla'
+  ].join('\n')
+
+  expect(convertRecipe({ jsonLd: [], microdata: [], selection })).toEqual([
+    { kind: 'heading', text: 'Pastry Crust' },
+    {
+      kind: 'ingredient',
+      original: '2 cups all purpose flour',
+      text: '5 dl vetemjöl'
+    },
+    { kind: 'ingredient', original: '1/4 cup sugar', text: '½ dl socker' },
+    { kind: 'heading', text: 'Cream Filling' },
+    {
+      kind: 'ingredient',
+      original: '1 cup heavy cream',
+      text: '2½ dl vispgrädde'
+    },
+    { kind: 'ingredient', original: '1 tsp vanilla', text: '1 tsk vanilj' }
   ])
 })

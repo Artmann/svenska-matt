@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
-import type { ConvertedIngredient } from './types'
-import { convertPageData } from './pipeline'
+import type { RecipeItem } from './types'
+import { convertRecipe } from './pipeline'
 import { readActiveTab } from './popup/read-active-tab'
 
 const injectionError =
@@ -13,7 +13,25 @@ const emptyMessage =
 type Status =
   | { kind: 'loading' }
   | { kind: 'error'; message: string }
-  | { kind: 'ready'; ingredients: ConvertedIngredient[] }
+  | { kind: 'ready'; items: RecipeItem[] }
+
+function hasIngredients(items: RecipeItem[]): boolean {
+  return items.some((item) => item.kind === 'ingredient')
+}
+
+function toClipboard(items: RecipeItem[]): string {
+  const lines: string[] = []
+
+  items.forEach((item, index) => {
+    if (item.kind === 'heading' && index > 0) {
+      lines.push('')
+    }
+
+    lines.push(item.text)
+  })
+
+  return lines.join('\n')
+}
 
 export function App() {
   const [status, setStatus] = useState<Status>({ kind: 'loading' })
@@ -27,7 +45,7 @@ export function App() {
         const raw = await readActiveTab()
 
         if (!cancelled) {
-          setStatus({ kind: 'ready', ingredients: convertPageData(raw) })
+          setStatus({ kind: 'ready', items: convertRecipe(raw) })
         }
       } catch {
         if (!cancelled) {
@@ -43,11 +61,9 @@ export function App() {
     }
   }, [])
 
-  async function copyAll(ingredients: ConvertedIngredient[]) {
+  async function copyAll(items: RecipeItem[]) {
     try {
-      await navigator.clipboard.writeText(
-        ingredients.map((ingredient) => ingredient.text).join('\n')
-      )
+      await navigator.clipboard.writeText(toClipboard(items))
 
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
@@ -66,10 +82,10 @@ export function App() {
           <p className="text-xs text-slate-500">Recept i svenska mått</p>
         </div>
 
-        {status.kind === 'ready' && status.ingredients.length > 0 && (
+        {status.kind === 'ready' && hasIngredients(status.items) && (
           <button
             type="button"
-            onClick={() => void copyAll(status.ingredients)}
+            onClick={() => void copyAll(status.items)}
             className="rounded-md bg-sky-700 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-sky-800"
           >
             {copied ? 'Kopierat!' : 'Kopiera'}
@@ -87,20 +103,29 @@ export function App() {
         </p>
       )}
 
-      {status.kind === 'ready' && status.ingredients.length === 0 && (
+      {status.kind === 'ready' && !hasIngredients(status.items) && (
         <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-900">
           {emptyMessage}
         </p>
       )}
 
-      {status.kind === 'ready' && status.ingredients.length > 0 && (
-        <ul className="flex flex-col divide-y divide-slate-100">
-          {status.ingredients.map((ingredient, index) => (
-            <li key={index} className="py-2">
-              <p className="text-sm font-medium">{ingredient.text}</p>
-              <p className="text-xs text-slate-400">{ingredient.original}</p>
-            </li>
-          ))}
+      {status.kind === 'ready' && hasIngredients(status.items) && (
+        <ul className="flex flex-col">
+          {status.items.map((item, index) =>
+            item.kind === 'heading' ? (
+              <li
+                key={index}
+                className="mb-0.5 mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500 first:mt-0"
+              >
+                {item.text}
+              </li>
+            ) : (
+              <li key={index} className="py-1.5">
+                <p className="text-sm font-medium">{item.text}</p>
+                <p className="text-xs text-slate-400">{item.original}</p>
+              </li>
+            )
+          )}
         </ul>
       )}
     </main>

@@ -4,12 +4,12 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "typecheck": "tsc --noEmit",
-    "test": "bun test",
+    "dev": "vite",
     "format": "oxfmt",
-    "lint": "oxlint"
+    "lint": "oxlint",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "react": "^19.1.0",

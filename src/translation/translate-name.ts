@@ -277,3 +277,18 @@ export function translateName(name: string): string {
     normalized
   )
 }
+
+// True when the name maps to a dictionary ingredient. Used to tell a real
+// no-quantity ingredient ("Kosher salt") from a section header ("Pastry Crust").
+export function isKnownIngredient(name: string): boolean {
+  const normalized = normalize(name)
+
+  if (normalized === '') {
+    return false
+  }
+
+  return (
+    lookup(normalized.split(' ')) !== null ||
+    translateConjunction(normalized) !== null
+  )
+}

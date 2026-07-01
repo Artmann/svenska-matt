@@ -25,3 +25,7 @@ export interface ConvertedIngredient {
   original: string
   text: string
 }
+
+export type RecipeItem =
+  | { kind: 'heading'; text: string }
+  | { kind: 'ingredient'; original: string; text: string }
