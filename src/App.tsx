@@ -4,15 +4,21 @@ import type { RecipeItem } from './types'
 import { convertRecipe } from './pipeline'
 import { readActiveTab } from './popup/read-active-tab'
 
-const injectionError =
-  'Tillägget kan inte läsa den här sidan. Öppna ett recept i en vanlig webbflik och försök igen.'
+const readError = {
+  title: 'Sidan går inte att läsa.',
+  detail: 'Öppna ett recept i en vanlig webbflik och försök igen.'
+}
 
-const emptyMessage =
-  'Kunde inte hitta några ingredienser på den här sidan. Markera ingredienslistan och försök igen.'
+const emptyNotice = {
+  title: 'Inga ingredienser hittades här.',
+  detail: 'Markera ingredienslistan på sidan och öppna Svenska Mått igen.'
+}
+
+const skeletonWidths = ['70%', '54%', '82%', '48%', '64%']
 
 type Status =
   | { kind: 'loading' }
-  | { kind: 'error'; message: string }
+  | { kind: 'error' }
   | { kind: 'ready'; items: RecipeItem[] }
 
 function hasIngredients(items: RecipeItem[]): boolean {
@@ -33,6 +39,37 @@ function toClipboard(items: RecipeItem[]): string {
   return lines.join('\n')
 }
 
+function Notice({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="mx-4 mb-4 flex gap-2.5 rounded-lg border border-hairline bg-raised px-3.5 py-3">
+      <span
+        aria-hidden
+        className="mt-1.5 size-1.5 shrink-0 rounded-[1px] bg-accent"
+      />
+      <div>
+        <p className="text-sm text-ink">{title}</p>
+        <p className="mt-1 text-xs leading-relaxed text-ink-soft">{detail}</p>
+      </div>
+    </div>
+  )
+}
+
+function Skeleton() {
+  return (
+    <div className="px-4 pt-1 pb-4">
+      {skeletonWidths.map((width, index) => (
+        <div key={index} className="py-2">
+          <div
+            className="h-3.5 rounded bg-raised motion-safe:animate-pulse"
+            style={{ width }}
+          />
+          <div className="mt-1.5 h-2.5 w-2/5 rounded bg-raised motion-safe:animate-pulse" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function App() {
   const [status, setStatus] = useState<Status>({ kind: 'loading' })
   const [copied, setCopied] = useState(false)
@@ -49,7 +86,7 @@ export function App() {
         }
       } catch {
         if (!cancelled) {
-          setStatus({ kind: 'error', message: injectionError })
+          setStatus({ kind: 'error' })
         }
       }
     }
@@ -72,57 +109,60 @@ export function App() {
     }
   }
 
+  const showCopy = status.kind === 'ready' && hasIngredients(status.items)
+
   return (
-    <main className="w-[360px] bg-white p-4 font-sans text-slate-900">
-      <header className="mb-3 flex items-center justify-between gap-2">
-        <div>
-          <h1 className="text-base font-semibold leading-tight">
-            Svenska Mått
+    <main className="w-[360px] bg-surface pb-1 text-ink">
+      <header className="border-b border-hairline px-4 pt-4 pb-3">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="font-display text-lg leading-none font-semibold tracking-tight text-ink">
+            Svenska Mått<span className="text-accent">.</span>
           </h1>
-          <p className="text-xs text-slate-500">Recept med Svenska Mått</p>
+
+          {showCopy && (
+            <button
+              type="button"
+              onClick={() => void copyAll(status.items)}
+              className="min-w-[4.75rem] rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-on-accent transition-colors hover:bg-accent-strong focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none"
+            >
+              {copied ? 'Kopierat!' : 'Kopiera'}
+            </button>
+          )}
         </div>
 
-        {status.kind === 'ready' && hasIngredients(status.items) && (
-          <button
-            type="button"
-            onClick={() => void copyAll(status.items)}
-            className="rounded-md bg-sky-700 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-sky-800"
-          >
-            {copied ? 'Kopierat!' : 'Kopiera'}
-          </button>
-        )}
+        <p className="mt-1 text-xs text-ink-faint">Recept med Svenska Mått</p>
       </header>
 
-      {status.kind === 'loading' && (
-        <p className="py-6 text-center text-sm text-slate-500">Läser sidan …</p>
-      )}
+      {status.kind === 'loading' && <Skeleton />}
 
-      {status.kind === 'error' && (
-        <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-900">
-          {status.message}
-        </p>
-      )}
+      {status.kind === 'error' && <Notice {...readError} />}
 
       {status.kind === 'ready' && !hasIngredients(status.items) && (
-        <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-900">
-          {emptyMessage}
-        </p>
+        <Notice {...emptyNotice} />
       )}
 
       {status.kind === 'ready' && hasIngredients(status.items) && (
-        <ul className="flex flex-col">
+        <ul className="px-4 pt-1 pb-4">
           {status.items.map((item, index) =>
             item.kind === 'heading' ? (
               <li
-                key={index}
-                className="mb-0.5 mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500 first:mt-0"
+                key={`h-${index}-${item.text}`}
+                className="mt-5 mb-1 flex items-center gap-2 first:mt-1"
               >
-                {item.text}
+                <span
+                  aria-hidden
+                  className="size-1.5 shrink-0 rounded-[1px] bg-accent"
+                />
+                <span className="font-display text-[13px] font-medium text-ink">
+                  {item.text}
+                </span>
               </li>
             ) : (
-              <li key={index} className="py-1.5">
-                <p className="text-sm font-medium">{item.text}</p>
-                <p className="text-xs text-slate-400">{item.original}</p>
+              <li key={`i-${index}-${item.original}`} className="py-1.5">
+                <p className="text-sm font-medium text-ink tabular-nums">
+                  {item.text}
+                </p>
+                <p className="mt-0.5 text-xs text-ink-faint">{item.original}</p>
               </li>
             )
           )}

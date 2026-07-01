@@ -1,11 +1,60 @@
 @import 'tailwindcss';
 
-@theme {
-  --font-sans:
-    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+/* Semantic tokens mapped to Tailwind utilities (bg-surface, text-ink, …). The
+   values live in the CSS variables below so they can flip with the system
+   colour scheme without duplicating utilities. */
+@theme inline {
+  --font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
+  --font-sans: 'Hanken Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-hairline: var(--hairline);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-on-accent: var(--on-accent);
+}
+
+/* Warm-tinted neutrals + a lingonberry accent. No pure black/white. */
+:root {
+  color-scheme: light dark;
+
+  --surface: oklch(0.985 0.006 85);
+  --raised: oklch(0.955 0.009 84);
+  --ink: oklch(0.26 0.012 62);
+  --ink-soft: oklch(0.46 0.012 62);
+  --ink-faint: oklch(0.55 0.012 64);
+  --hairline: oklch(0.9 0.008 78);
+  --accent: oklch(0.51 0.15 22);
+  --accent-strong: oklch(0.44 0.15 22);
+  --on-accent: oklch(0.98 0.01 85);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: oklch(0.2 0.01 62);
+    --raised: oklch(0.245 0.012 62);
+    --ink: oklch(0.94 0.008 82);
+    --ink-soft: oklch(0.76 0.011 76);
+    --ink-faint: oklch(0.61 0.011 70);
+    --hairline: oklch(0.33 0.012 62);
+    --accent: oklch(0.66 0.13 26);
+    --accent-strong: oklch(0.72 0.13 26);
+    --on-accent: oklch(0.18 0.01 62);
+  }
 }
 
 html,
 body {
   margin: 0;
+}
+
+body {
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
