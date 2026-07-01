@@ -8,6 +8,7 @@
     "dev": "vite",
     "format": "oxfmt",
     "lint": "oxlint",
+    "pack": "bun run build && bun scripts/pack.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
